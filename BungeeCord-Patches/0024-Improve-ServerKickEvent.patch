@@ -1,4 +1,4 @@
-From c948a81d4f6604ea281baa2f9a96ac9366ea9e44 Mon Sep 17 00:00:00 2001
+From dfe62c9142c4d0da9cd5f7bce52f4bdfb795b59e Mon Sep 17 00:00:00 2001
 From: Nathan Poirier <nathan@poirier.io>
 Date: Tue, 28 Jun 2016 23:00:49 -0500
 Subject: [PATCH] Improve ServerKickEvent
@@ -68,76 +68,67 @@ index 3f9efaa8..5d2597ad 100644
      /**
       * @return the kick reason
 diff --git a/proxy/src/main/java/net/md_5/bungee/ServerConnector.java b/proxy/src/main/java/net/md_5/bungee/ServerConnector.java
-index e670a57a..307a417b 100644
+index 6f49765f..02856527 100644
 --- a/proxy/src/main/java/net/md_5/bungee/ServerConnector.java
 +++ b/proxy/src/main/java/net/md_5/bungee/ServerConnector.java
-@@ -439,7 +439,7 @@ public class ServerConnector extends PacketHandler
+@@ -450,7 +450,7 @@ public class ServerConnector extends PacketHandler
          ServerKickEvent event = new ServerKickEvent( user, target, new BaseComponent[]
          {
              kick.getMessage()
 -        }, def, ServerKickEvent.State.CONNECTING );
-+        }, def, ServerKickEvent.State.CONNECTING, ServerKickEvent.Cause.SERVER );  // Waterfall );
++        }, def, ServerKickEvent.State.CONNECTING, ServerKickEvent.Cause.SERVER );  // Waterfall
          if ( event.getKickReason().toLowerCase( Locale.ROOT ).contains( "outdated" ) && def != null )
          {
              // Pre cancel the event if we are going to try another server
 diff --git a/proxy/src/main/java/net/md_5/bungee/connection/DownstreamBridge.java b/proxy/src/main/java/net/md_5/bungee/connection/DownstreamBridge.java
-index cd3ed518..d4036c5d 100644
+index 1c075a9f..0481169c 100644
 --- a/proxy/src/main/java/net/md_5/bungee/connection/DownstreamBridge.java
 +++ b/proxy/src/main/java/net/md_5/bungee/connection/DownstreamBridge.java
-@@ -98,16 +98,19 @@ public class DownstreamBridge extends PacketHandler
-             return;
+@@ -99,15 +99,18 @@ public class DownstreamBridge extends PacketHandler
          }
  
-+        // Waterfall start
          ServerInfo def = con.updateAndGetNextServer( server.getInfo() );
 -        if ( def != null )
-+        ServerKickEvent event = bungee.getPluginManager().callEvent( new ServerKickEvent( con, server.getInfo(), TextComponent.fromLegacyText( bungee.getTranslation( "server_went_down" ) ), def, ServerKickEvent.State.CONNECTED, ServerKickEvent.Cause.EXCEPTION ) );
++        // Waterfall start
++        ServerKickEvent event = bungee.getPluginManager().callEvent( new ServerKickEvent( con, server.getInfo(), TextComponent.fromLegacyText( bungee.getTranslation( "lost_connection" ) ), def, ServerKickEvent.State.CONNECTED, ServerKickEvent.Cause.EXCEPTION ) );
 +        if ( event.isCancelled() && event.getCancelServer() != null )
          {
              server.setObsolete( true );
 -            con.connectNow( def, ServerConnectEvent.Reason.SERVER_DOWN_REDIRECT );
--            con.sendMessage( bungee.getTranslation( "server_went_down" ) );
--        } else
 +            con.connectNow( event.getCancelServer(), ServerConnectEvent.Reason.SERVER_DOWN_REDIRECT );
-+        }
-+        else
+             con.sendMessage( bungee.getTranslation( "server_went_down", def.getName() ) );
+         } else
          {
 -            con.disconnect( Util.exception( t ) );
-+            con.disconnect0( event.getReason() );
++            con.disconnect( event.getReason() );
          }
 +        // Waterfall end
      }
  
      @Override
-@@ -122,7 +125,19 @@ public class DownstreamBridge extends PacketHandler
- 
-         if ( !server.isObsolete() )
-         {
--            con.disconnect( bungee.getTranslation( "lost_connection" ) );
-+            // Waterfall start
-+            ServerInfo def = con.updateAndGetNextServer( server.getInfo() );
-+            ServerKickEvent event = bungee.getPluginManager().callEvent( new ServerKickEvent( con, server.getInfo(), TextComponent.fromLegacyText( bungee.getTranslation( "lost_connection" ) ), def, ServerKickEvent.State.CONNECTED, ServerKickEvent.Cause.LOST_CONNECTION ) );
-+            if ( event.isCancelled() && event.getCancelServer() != null )
-+            {
-+                server.setObsolete( true );
-+                con.connectNow( event.getCancelServer() );
-+            }
-+            else
-+            {
-+                con.disconnect0( event.getReason() );
-+            }
-+            // Waterfall end
+@@ -130,15 +133,18 @@ public class DownstreamBridge extends PacketHandler
          }
  
-         ServerDisconnectEvent serverDisconnectEvent = new ServerDisconnectEvent( con, server.getInfo() );
-@@ -633,10 +648,14 @@ public class DownstreamBridge extends PacketHandler
-     public void handle(Kick kick) throws Exception
-     {
          ServerInfo def = con.updateAndGetNextServer( server.getInfo() );
-+        if ( java.util.Objects.equals( server.getInfo(), def ) )
-+        {
-+            def = null;
-+        }
+-        if ( def != null )
++        // Waterfall start
++        ServerKickEvent event = bungee.getPluginManager().callEvent( new ServerKickEvent( con, server.getInfo(), TextComponent.fromLegacyText( bungee.getTranslation( "lost_connection" ) ), def, ServerKickEvent.State.CONNECTED, ServerKickEvent.Cause.LOST_CONNECTION ) );
++        if ( event.isCancelled() && event.getCancelServer() != null )
+         {
+             server.setObsolete( true );
+-            con.connectNow( def, ServerConnectEvent.Reason.SERVER_DOWN_REDIRECT );
++            con.connectNow( event.getCancelServer(), ServerConnectEvent.Reason.SERVER_DOWN_REDIRECT );
+             con.sendMessage( bungee.getTranslation( "server_went_down", def.getName() ) );
+         } else
+         {
+-            con.disconnect( bungee.getTranslation( "lost_connection" ) );
++            con.disconnect( event.getReason() );
+         }
++        // Waterfall end
+     }
+ 
+     @Override
+@@ -648,7 +654,7 @@ public class DownstreamBridge extends PacketHandler
          ServerKickEvent event = bungee.getPluginManager().callEvent( new ServerKickEvent( con, server.getInfo(), new BaseComponent[]
          {
              kick.getMessage()
@@ -147,5 +138,5 @@ index cd3ed518..d4036c5d 100644
          {
              con.connectNow( event.getCancelServer(), ServerConnectEvent.Reason.KICK_REDIRECT );
 -- 
-2.44.0
+2.34.1
 

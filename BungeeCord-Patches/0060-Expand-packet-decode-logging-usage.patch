@@ -1,4 +1,4 @@
-From 980d706d994c43ce5973b1dd44c676af7a6e1274 Mon Sep 17 00:00:00 2001
+From 83b5f4edcc9eb52b3abb056eca1329f0bf25169e Mon Sep 17 00:00:00 2001
 From: Shane Freeder <theboyetronic@gmail.com>
 Date: Sun, 19 Jun 2022 10:31:51 +0100
 Subject: [PATCH] Expand packet-decode-logging usage
@@ -24,5 +24,5 @@ index d82173b1..a96fb58e 100644
                      {
                          ProxyServer.getInstance().getLogger().log( Level.WARNING, "{0} - corrupted frame: {1}", new Object[]
 -- 
-2.39.3 (Apple Git-146)
+2.34.1
 

@@ -1,4 +1,4 @@
-From 21306c26f7c8a4074c9a3d5fbe1991a1d00efb52 Mon Sep 17 00:00:00 2001
+From 5118f852327440f3a39cc33a1ca06b0ad2766c7e Mon Sep 17 00:00:00 2001
 From: theminecoder <theminecoder.dev@gmail.com>
 Date: Wed, 22 Apr 2020 14:00:44 +1000
 Subject: [PATCH] Add exception reporting event
@@ -695,5 +695,5 @@ index 38b75b51..02ec98fc 100644
  
              // If we have a period of 0 or less, only run once
 -- 
-2.44.0
+2.34.1
 

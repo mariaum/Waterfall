@@ -1,4 +1,4 @@
-From bf64d9cf56589f4dc98386425c290d03b14837fc Mon Sep 17 00:00:00 2001
+From dcd2e90c9f62d3f90a8d9a96832e8956b51128af Mon Sep 17 00:00:00 2001
 From: Shane Freeder <theboyetronic@gmail.com>
 Date: Mon, 2 Dec 2019 11:35:17 +0000
 Subject: [PATCH] ConnectionInitEvent
@@ -67,7 +67,7 @@ index 00000000..6e79675f
 +    }
 +}
 diff --git a/proxy/src/main/java/net/md_5/bungee/netty/PipelineUtils.java b/proxy/src/main/java/net/md_5/bungee/netty/PipelineUtils.java
-index 6a0d3351..3b157d79 100644
+index f1fce77b..75d2bd0e 100644
 --- a/proxy/src/main/java/net/md_5/bungee/netty/PipelineUtils.java
 +++ b/proxy/src/main/java/net/md_5/bungee/netty/PipelineUtils.java
 @@ -1,6 +1,7 @@
@@ -119,5 +119,5 @@ index 6a0d3351..3b157d79 100644
      };
      public static final Base BASE = new Base( false );
 -- 
-2.44.0
+2.34.1
 
